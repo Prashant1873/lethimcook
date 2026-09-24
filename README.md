@@ -19,9 +19,16 @@ Data is dispatched directly into a connected Google Sheet.
 
 ## Quick Setup
 1. Open [`GOOGLE_SHEETS_SETUP.md`](./GOOGLE_SHEETS_SETUP.md) for instructions on creating and deploying the Google Apps Script.
-2. Open `index.html` in your browser.
-3. Click the discreet gear icon at the bottom right (or press `Ctrl + Shift + S`) to enter your deployed Google Apps Script URL.
+2. Open `index.html` in your browser (or use GitHub Pages).
+3. Click the discreet gear icon at the bottom right (or press `Ctrl + Shift + S`) to customize the Web App URL if needed.
 4. Share the URL with respondents!
+
+## 🚀 Live Hosting via GitHub Pages
+A GitHub Actions workflow is included in `.github/workflows/deploy.yml`. To enable your live public link:
+1. In this GitHub repo, go to **Settings** > **Pages** (under the "Code and automation" section).
+2. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+3. Every push to `main` will now automatically build and publish the live site at:
+   `https://prashant1873.github.io/lethimcook/`
 
 ## Files
 - `index.html` - Core survey interface
