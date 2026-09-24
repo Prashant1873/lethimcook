@@ -1,0 +1,377 @@
+/**
+ * LunaTick - Client Engine
+ * 
+ * Features:
+ * - Covert astronomical moon phase calculator
+ * - Tactile casual mood card selection
+ * - Google Apps Script dispatcher with zero-CORS-friction transport
+ */
+
+// 1. Mood Cards Configuration (Casual, relatable terminology)
+const MOOD_OPTIONS = [
+  {
+    id: "on-a-roll",
+    title: "On a roll today",
+    emoji: "🔥",
+    desc: "Sharp, productive, high momentum"
+  },
+  {
+    id: "cruising-chill",
+    title: "Cruising / Chill",
+    emoji: "🌊",
+    desc: "Relaxed, steady, good headspace"
+  },
+  {
+    id: "mood-off",
+    title: "Mood off",
+    emoji: "🌧️",
+    desc: "Down, glum, out of rhythm"
+  },
+  {
+    id: "chaos-mode",
+    title: "Chaos mode / Overwhelmed",
+    emoji: "🤯",
+    desc: "Scattered, 100 tabs open, restless"
+  },
+  {
+    id: "just-existing",
+    title: "Just existing / Meh",
+    emoji: "😐",
+    desc: "Autopilot, neutral, whatever"
+  },
+  {
+    id: "low-battery",
+    title: "Low battery / Drained",
+    emoji: "🪫",
+    desc: "Exhausted, running on empty, need sleep"
+  },
+  {
+    id: "ready-to-snap",
+    title: "Ready to snap",
+    emoji: "⚡",
+    desc: "Irritable, short fuse, agitated"
+  },
+  {
+    id: "in-my-head",
+    title: "Deep in my head",
+    emoji: "🌀",
+    desc: "Overthinking, contemplative, quiet"
+  },
+  {
+    id: "hyped-buzzing",
+    title: "Hyped / Buzzing",
+    emoji: "✨",
+    desc: "Excited, positive anticipation, energetic"
+  }
+];
+
+// 2. Secret Astronomical Moon Phase Calculation
+// Highly accurate synodic month cycle based on epoch Jan 6, 2000, 18:14 UTC
+function calculateSecretLunarPhase(date = new Date()) {
+  const epoch = Date.UTC(2000, 0, 6, 18, 14, 0);
+  const diffDays = (date.getTime() - epoch) / (1000 * 60 * 60 * 24);
+  const synodicMonth = 29.530588853;
+  
+  let phaseAge = diffDays % synodicMonth;
+  if (phaseAge < 0) phaseAge += synodicMonth;
+
+  // Illumination fraction (0% to 100%)
+  const theta = (phaseAge / synodicMonth) * 2 * Math.PI;
+  const illuminationPct = Math.round(((1 - Math.cos(theta)) / 2) * 100);
+
+  let phaseName = "";
+  let phaseEmoji = "";
+
+  if (phaseAge < 1.84566) {
+    phaseName = "New Moon";
+    phaseEmoji = "🌑";
+  } else if (phaseAge < 5.53699) {
+    phaseName = "Waxing Crescent";
+    phaseEmoji = "🌒";
+  } else if (phaseAge < 9.22831) {
+    phaseName = "First Quarter";
+    phaseEmoji = "🌓";
+  } else if (phaseAge < 12.91963) {
+    phaseName = "Waxing Gibbous";
+    phaseEmoji = "🌔";
+  } else if (phaseAge < 16.61096) {
+    phaseName = "Full Moon";
+    phaseEmoji = "🌕";
+  } else if (phaseAge < 20.30228) {
+    phaseName = "Waning Gibbous";
+    phaseEmoji = "🌖";
+  } else if (phaseAge < 23.99361) {
+    phaseName = "Last Quarter";
+    phaseEmoji = "🌗";
+  } else if (phaseAge < 27.68493) {
+    phaseName = "Waning Crescent";
+    phaseEmoji = "🌘";
+  } else {
+    phaseName = "New Moon";
+    phaseEmoji = "🌑";
+  }
+
+  return {
+    phaseName,
+    phaseEmoji,
+    illumination: `${illuminationPct}%`,
+    moonAge: `${phaseAge.toFixed(1)} days`
+  };
+}
+
+// 3. Application State & Storage
+const STORAGE_KEY_GAS_URL = "lunatick_gas_webhook_url";
+const STORAGE_KEY_SUBMISSIONS = "lunatick_local_logs";
+
+let state = {
+  name: "",
+  selectedMood: null,
+  isSubmitting: false,
+  gasUrl: localStorage.getItem(STORAGE_KEY_GAS_URL) || ""
+};
+
+// 4. DOM Elements
+const userNameInput = document.getElementById("user-name");
+const moodGrid = document.getElementById("mood-grid");
+const submitBtn = document.getElementById("submit-btn");
+const trackerForm = document.getElementById("tracker-form");
+const formContainer = document.getElementById("form-container");
+const successContainer = document.getElementById("success-container");
+const resetBtn = document.getElementById("reset-btn");
+
+// Admin modal elements
+const adminTrigger = document.getElementById("admin-trigger");
+const adminModal = document.getElementById("admin-modal");
+const modalCloseBtn = document.getElementById("modal-close-btn");
+const gasUrlInput = document.getElementById("gas-url-input");
+const saveUrlBtn = document.getElementById("save-url-btn");
+const testConnectionBtn = document.getElementById("test-connection-btn");
+const testFeedback = document.getElementById("test-feedback");
+const secretLunarPreview = document.getElementById("secret-lunar-preview");
+
+// 5. Initialize Mood Grid Cards
+function renderMoodCards() {
+  moodGrid.innerHTML = "";
+  MOOD_OPTIONS.forEach((mood, index) => {
+    const card = document.createElement("div");
+    card.className = "mood-card";
+    card.setAttribute("role", "radio");
+    card.setAttribute("aria-checked", "false");
+    card.setAttribute("tabindex", "0");
+    card.dataset.moodId = mood.id;
+    card.dataset.moodTitle = mood.title;
+
+    card.innerHTML = `
+      <div class="mood-card-header">
+        <span class="mood-card-emoji">${mood.emoji}</span>
+        <span class="mood-card-check" aria-hidden="true"></span>
+      </div>
+      <div class="mood-card-title">${mood.title}</div>
+      <div class="mood-card-desc">${mood.desc}</div>
+    `;
+
+    // Click handler
+    card.addEventListener("click", () => selectMood(mood, card));
+
+    // Keyboard accessibility (Space / Enter to select)
+    card.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        selectMood(mood, card);
+      }
+    });
+
+    moodGrid.appendChild(card);
+  });
+}
+
+function selectMood(mood, cardElement) {
+  // Deselect existing
+  document.querySelectorAll(".mood-card").forEach(c => {
+    c.classList.remove("selected");
+    c.setAttribute("aria-checked", "false");
+  });
+
+  // Select new
+  cardElement.classList.add("selected");
+  cardElement.setAttribute("aria-checked", "true");
+  state.selectedMood = mood;
+  validateForm();
+}
+
+function validateForm() {
+  const hasName = userNameInput.value.trim().length > 0;
+  const hasMood = state.selectedMood !== null;
+  submitBtn.disabled = !(hasName && hasMood) || state.isSubmitting;
+}
+
+// 6. Form Submission & Secret Lunar Logging
+async function handleSubmit() {
+  const name = userNameInput.value.trim();
+  if (!name || !state.selectedMood || state.isSubmitting) return;
+
+  state.isSubmitting = true;
+  submitBtn.classList.add("loading");
+  submitBtn.disabled = true;
+
+  const now = new Date();
+  const lunarData = calculateSecretLunarPhase(now);
+
+  const payload = {
+    localTime: now.toLocaleString(),
+    isoTimestamp: now.toISOString(),
+    moonPhase: lunarData.phaseName,
+    illumination: lunarData.illumination,
+    moonAge: lunarData.moonAge,
+    name: name,
+    mood: `${state.selectedMood.emoji} ${state.selectedMood.title}`
+  };
+
+  // Always save a local copy in localStorage as safety backup
+  try {
+    const existingLogs = JSON.parse(localStorage.getItem(STORAGE_KEY_SUBMISSIONS) || "[]");
+    existingLogs.push(payload);
+    localStorage.setItem(STORAGE_KEY_SUBMISSIONS, JSON.stringify(existingLogs));
+  } catch (e) {
+    console.warn("Could not save to localStorage backup", e);
+  }
+
+  // Dispatch to Google Apps Script if URL configured
+  if (state.gasUrl && state.gasUrl.trim().startsWith("http")) {
+    try {
+      // mode: 'no-cors' allows posting to Google Apps Script without CORS redirect blocking
+      await fetch(state.gasUrl.trim(), {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error("Network sync error (will retry or kept in local logs):", err);
+    }
+  } else {
+    console.info("Notice: No Google Apps Script URL set yet. Entry saved to browser local logs.");
+  }
+
+  // Artificial pleasant delay for tactile confirmation
+  setTimeout(() => {
+    state.isSubmitting = false;
+    submitBtn.classList.remove("loading");
+    showSuccessView();
+  }, 450);
+}
+
+function showSuccessView() {
+  formContainer.hidden = true;
+  successContainer.hidden = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetForm() {
+  userNameInput.value = "";
+  state.selectedMood = null;
+  document.querySelectorAll(".mood-card").forEach(c => {
+    c.classList.remove("selected");
+    c.setAttribute("aria-checked", "false");
+  });
+  submitBtn.disabled = true;
+  formContainer.hidden = false;
+  successContainer.hidden = true;
+  userNameInput.focus();
+}
+
+// 7. Admin & Secret Settings Modal
+function openAdminModal() {
+  gasUrlInput.value = state.gasUrl;
+  const currentLunar = calculateSecretLunarPhase();
+  secretLunarPreview.textContent = `${currentLunar.phaseEmoji} ${currentLunar.phaseName} (${currentLunar.illumination} illuminated, ${currentLunar.moonAge})`;
+  testFeedback.hidden = true;
+  adminModal.hidden = false;
+}
+
+function closeAdminModal() {
+  adminModal.hidden = true;
+}
+
+function saveGasUrl() {
+  const url = gasUrlInput.value.trim();
+  state.gasUrl = url;
+  localStorage.setItem(STORAGE_KEY_GAS_URL, url);
+  showTestFeedback("Settings saved successfully!", true);
+  setTimeout(() => closeAdminModal(), 1200);
+}
+
+async function testConnection() {
+  const url = gasUrlInput.value.trim();
+  if (!url || !url.startsWith("http")) {
+    showTestFeedback("Please enter a valid Google Apps Script Web App URL first.", false);
+    return;
+  }
+
+  showTestFeedback("Sending test ping to Google Sheet...", true);
+
+  const testPayload = {
+    localTime: new Date().toLocaleString(),
+    moonPhase: calculateSecretLunarPhase().phaseName,
+    illumination: calculateSecretLunarPhase().illumination,
+    moonAge: calculateSecretLunarPhase().moonAge,
+    name: "[Test Connection Ping]",
+    mood: "Testing connection 🚀"
+  };
+
+  try {
+    await fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(testPayload)
+    });
+    showTestFeedback("✓ Ping dispatched! Check your Google Sheet to confirm a test row appeared.", true);
+  } catch (err) {
+    showTestFeedback("Error dispatching test ping: " + err.message, false);
+  }
+}
+
+function showTestFeedback(message, isSuccess) {
+  testFeedback.textContent = message;
+  testFeedback.className = "test-feedback " + (isSuccess ? "success" : "error");
+  testFeedback.hidden = false;
+}
+
+// 8. Event Listeners & Shortcuts
+userNameInput.addEventListener("input", validateForm);
+submitBtn.addEventListener("click", handleSubmit);
+resetBtn.addEventListener("click", resetForm);
+
+adminTrigger.addEventListener("click", openAdminModal);
+modalCloseBtn.addEventListener("click", closeAdminModal);
+saveUrlBtn.addEventListener("click", saveGasUrl);
+testConnectionBtn.addEventListener("click", testConnection);
+
+// Keyboard shortcut: Ctrl + Shift + S to toggle secret settings
+window.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.shiftKey && (e.key === "S" || e.key === "s")) {
+    e.preventDefault();
+    if (adminModal.hidden) {
+      openAdminModal();
+    } else {
+      closeAdminModal();
+    }
+  }
+  if (e.key === "Escape" && !adminModal.hidden) {
+    closeAdminModal();
+  }
+});
+
+// Close modal when clicking outside dialog
+adminModal.addEventListener("click", (e) => {
+  if (e.target === adminModal) {
+    closeAdminModal();
+  }
+});
+
+// 9. Initial Boot
+renderMoodCards();
+validateForm();

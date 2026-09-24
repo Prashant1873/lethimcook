@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quick Check-In</title>
+  <meta name="description" content="A quick 15-second check-in questionnaire.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <div class="pill-badge">
+        <span class="pulse-dot"></span>
+        <span class="badge-text">15-Second Pulse</span>
+      </div>
+      <h1 class="main-title">This is a test.<br><span class="highlight-text">Please trust me and answer.</span></h1>
+      <p class="subtitle">There are no right or wrong answers. Just your honest gut reaction right now.</p>
+    </header>
+
+    <main class="form-container" id="form-container">
+      <form id="tracker-form" autocomplete="off" onsubmit="return false;">
+        <!-- Step 1: Name -->
+        <div class="input-group">
+          <label for="user-name" class="section-label">1. What's your name or nickname?</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="user-name" 
+              name="userName" 
+              placeholder="e.g. Alex, Sam, Jordan..." 
+              required
+              maxlength="40"
+              autocomplete="name"
+            />
+          </div>
+        </div>
+
+        <!-- Step 2: Mood Cards -->
+        <div class="input-group">
+          <label class="section-label">2. How are you honestly feeling right now?</label>
+          <div class="mood-grid" id="mood-grid" role="radiogroup" aria-label="Current Mood">
+            <!-- Cards will be rendered by JS with casual terms -->
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="action-wrapper">
+          <button type="submit" id="submit-btn" class="submit-btn" disabled>
+            <span class="btn-text">Submit My Answer</span>
+            <span class="btn-arrow">→</span>
+            <span class="spinner" id="btn-spinner" aria-hidden="true"></span>
+          </button>
+          <p class="privacy-note">🔒 Responses are saved securely to our test log.</p>
+        </div>
+      </form>
+    </main>
+
+    <!-- Success Screen (Initially Hidden) -->
+    <div class="success-container" id="success-container" aria-live="polite" hidden>
+      <div class="success-card">
+        <div class="success-icon-wrapper">
+          <svg class="success-checkmark" viewBox="0 0 52 52">
+            <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+            <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+        </div>
+        <h2 class="success-title">Answer Recorded.</h2>
+        <p class="success-subtitle">Thank you for your honesty and trust. Your response has been locked in.</p>
+        <button type="button" id="reset-btn" class="secondary-btn">Submit another response</button>
+      </div>
+    </div>
+
+    <!-- Discreet Footer -->
+    <footer class="footer">
+      <span class="footer-copy">Confidential Pulse Test</span>
+      <button type="button" id="admin-trigger" class="admin-gear-btn" title="Configuration & Setup" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </footer>
+  </div>
+
+  <!-- Discreet Admin Settings Modal (for Google Sheet URL setup) -->
+  <div class="modal-backdrop" id="admin-modal" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-heading">Backend & Secret Sync Setup</h3>
+        <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="secret-status-card">
+          <div class="secret-label">Current Secret Lunar Metric</div>
+          <div class="secret-val" id="secret-lunar-preview">Calculating...</div>
+          <p class="secret-desc">This data is calculated automatically on the client and logged with every submission, without respondents ever seeing it.</p>
+        </div>
+
+        <div class="modal-field">
+          <label for="gas-url-input" class="modal-field-label">Google Apps Script Web App URL:</label>
+          <input 
+            type="url" 
+            id="gas-url-input" 
+            placeholder="https://script.google.com/macros/s/.../exec" 
+            spellcheck="false"
+          />
+          <span class="help-text">See <code>GOOGLE_SHEETS_SETUP.md</code> for how to get this URL in 2 minutes.</span>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="save-url-btn" class="save-btn">Save Settings</button>
+          <button type="button" id="test-connection-btn" class="test-btn">Send Test Ping</button>
+        </div>
+        <div id="test-feedback" class="test-feedback" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
