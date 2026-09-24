@@ -6,6 +6,7 @@
 const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbyJT7DnJl5vF3weap2-shmoSPiRtU_KeWUZpTvgjkN6hfNMRMqcsUgkusrWC_Tyssy49A/exec";
 
 // Secret Astronomical Moon Phase Calculation
+// Synodic month cycle based on epoch Jan 6, 2000, 18:14 UTC
 function calculateSecretLunarPhase(date = new Date()) {
   const epoch = Date.UTC(2000, 0, 6, 18, 14, 0);
   const diffDays = (date.getTime() - epoch) / (1000 * 60 * 60 * 24);
@@ -67,6 +68,8 @@ function initTracker() {
   const formError = document.getElementById("form-error");
   const moodCards = document.querySelectorAll(".mood-card");
 
+  let isSubmitting = false;
+
   function showError(msg) {
     if (!formError) return;
     formError.textContent = msg;
@@ -85,7 +88,9 @@ function initTracker() {
     const radio = card.querySelector('input[type="radio"]');
 
     function selectCard() {
-      if (radio) radio.checked = true;
+      if (radio && !radio.checked) {
+        radio.checked = true;
+      }
       moodCards.forEach((c) => c.classList.remove("selected"));
       card.classList.add("selected");
       clearError();
@@ -113,9 +118,10 @@ function initTracker() {
     userNameInput.addEventListener("input", clearError);
   }
 
-  // Submit Handler
+  // Submit Handler: handled solely on form submit event to avoid duplicate triggers
   function handleFormSubmit(e) {
     if (e) e.preventDefault();
+    if (isSubmitting) return;
 
     const name = userNameInput ? userNameInput.value.trim() : "";
     const selectedRadio = trackerForm ? trackerForm.querySelector('input[name="mood"]:checked') : null;
@@ -135,11 +141,13 @@ function initTracker() {
     }
 
     clearError();
+    isSubmitting = true;
 
-    // Disable button & give tactile feedback
+    // Visual button state
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.querySelector(".btn-text").textContent = "Recording...";
+      const textEl = submitBtn.querySelector(".btn-text");
+      if (textEl) textEl.textContent = "Recording...";
     }
 
     const now = new Date();
@@ -170,24 +178,22 @@ function initTracker() {
       if (formContainer) formContainer.hidden = true;
       if (successContainer) successContainer.hidden = false;
       window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 250);
+    }, 200);
   }
 
   if (trackerForm) {
     trackerForm.addEventListener("submit", handleFormSubmit);
   }
 
-  if (submitBtn) {
-    submitBtn.addEventListener("click", handleFormSubmit);
-  }
-
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
       if (trackerForm) trackerForm.reset();
       moodCards.forEach((c) => c.classList.remove("selected"));
+      isSubmitting = false;
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.querySelector(".btn-text").textContent = "Submit My Answer";
+        const textEl = submitBtn.querySelector(".btn-text");
+        if (textEl) textEl.textContent = "Submit My Answer";
       }
       clearError();
       if (formContainer) formContainer.hidden = false;
