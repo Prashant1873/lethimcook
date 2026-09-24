@@ -122,12 +122,13 @@ function calculateSecretLunarPhase(date = new Date()) {
 // 3. Application State & Storage
 const STORAGE_KEY_GAS_URL = "lunatick_gas_webhook_url";
 const STORAGE_KEY_SUBMISSIONS = "lunatick_local_logs";
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbyJT7DnJl5vF3weap2-shmoSPiRtU_KeWUZpTvgjkN6hfNMRMqcsUgkusrWC_Tyssy49A/exec";
 
 let state = {
   name: "",
   selectedMood: null,
   isSubmitting: false,
-  gasUrl: localStorage.getItem(STORAGE_KEY_GAS_URL) || ""
+  gasUrl: localStorage.getItem(STORAGE_KEY_GAS_URL) || DEFAULT_GAS_URL
 };
 
 // 4. DOM Elements
