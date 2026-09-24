@@ -22,7 +22,7 @@
     </header>
 
     <main class="form-container" id="form-container">
-      <form id="tracker-form" autocomplete="off" onsubmit="return false;">
+      <form id="tracker-form" autocomplete="off">
         <!-- Step 1: Name -->
         <div class="input-group">
           <label for="user-name" class="section-label">1. What's your name or nickname?</label>
@@ -39,11 +39,110 @@
           </div>
         </div>
 
-        <!-- Step 2: Mood Cards -->
+        <!-- Step 2: Mood Cards (Rendered in static HTML for 100% reliability) -->
         <div class="input-group">
           <label class="section-label">2. How are you honestly feeling right now?</label>
           <div class="mood-grid" id="mood-grid" role="radiogroup" aria-label="Current Mood">
-            <!-- Cards will be rendered by JS with casual terms -->
+            
+            <!-- Card 1 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="🔥 On a roll today" required>
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">🔥</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">On a roll today</div>
+              <div class="mood-card-desc">Sharp, productive, high momentum</div>
+            </label>
+
+            <!-- Card 2 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="🌊 Cruising / Chill">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">🌊</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Cruising / Chill</div>
+              <div class="mood-card-desc">Relaxed, steady, good headspace</div>
+            </label>
+
+            <!-- Card 3 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="🌧️ Mood off">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">🌧️</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Mood off</div>
+              <div class="mood-card-desc">Down, glum, out of rhythm</div>
+            </label>
+
+            <!-- Card 4 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="🤯 Chaos mode / Overwhelmed">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">🤯</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Chaos mode</div>
+              <div class="mood-card-desc">Overwhelmed, 100 tabs open, restless</div>
+            </label>
+
+            <!-- Card 5 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="😐 Just existing / Meh">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">😐</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Just existing / Meh</div>
+              <div class="mood-card-desc">Autopilot, neutral, whatever</div>
+            </label>
+
+            <!-- Card 6 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="🪫 Low battery / Drained">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">🪫</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Low battery</div>
+              <div class="mood-card-desc">Exhausted, running on empty, need sleep</div>
+            </label>
+
+            <!-- Card 7 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="⚡ Ready to snap">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">⚡</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Ready to snap</div>
+              <div class="mood-card-desc">Irritable, short fuse, agitated</div>
+            </label>
+
+            <!-- Card 8 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="🌀 Deep in my head">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">🌀</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Deep in my head</div>
+              <div class="mood-card-desc">Overthinking, contemplative, quiet</div>
+            </label>
+
+            <!-- Card 9 -->
+            <label class="mood-card" tabindex="0">
+              <input type="radio" name="mood" value="✨ Hyped / Buzzing">
+              <div class="mood-card-header">
+                <span class="mood-card-emoji">✨</span>
+                <span class="mood-card-check" aria-hidden="true"></span>
+              </div>
+              <div class="mood-card-title">Hyped / Buzzing</div>
+              <div class="mood-card-desc">Excited, positive anticipation, energetic</div>
+            </label>
+
           </div>
         </div>
 
@@ -77,6 +176,5 @@
   </div>
 
   <script src="app.js"></script>
-
 </body>
 </html>
