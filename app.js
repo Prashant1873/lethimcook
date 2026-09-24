@@ -119,16 +119,13 @@ function calculateSecretLunarPhase(date = new Date()) {
   };
 }
 
-// 3. Application State & Storage
-const STORAGE_KEY_GAS_URL = "lunatick_gas_webhook_url";
-const STORAGE_KEY_SUBMISSIONS = "lunatick_local_logs";
-const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbyJT7DnJl5vF3weap2-shmoSPiRtU_KeWUZpTvgjkN6hfNMRMqcsUgkusrWC_Tyssy49A/exec";
+// 3. Google Sheets Destination (Hardcoded, 100% invisible to respondents)
+const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbyJT7DnJl5vF3weap2-shmoSPiRtU_KeWUZpTvgjkN6hfNMRMqcsUgkusrWC_Tyssy49A/exec";
 
 let state = {
   name: "",
   selectedMood: null,
-  isSubmitting: false,
-  gasUrl: localStorage.getItem(STORAGE_KEY_GAS_URL) || DEFAULT_GAS_URL
+  isSubmitting: false
 };
 
 // 4. DOM Elements
@@ -140,20 +137,10 @@ const formContainer = document.getElementById("form-container");
 const successContainer = document.getElementById("success-container");
 const resetBtn = document.getElementById("reset-btn");
 
-// Admin modal elements
-const adminTrigger = document.getElementById("admin-trigger");
-const adminModal = document.getElementById("admin-modal");
-const modalCloseBtn = document.getElementById("modal-close-btn");
-const gasUrlInput = document.getElementById("gas-url-input");
-const saveUrlBtn = document.getElementById("save-url-btn");
-const testConnectionBtn = document.getElementById("test-connection-btn");
-const testFeedback = document.getElementById("test-feedback");
-const secretLunarPreview = document.getElementById("secret-lunar-preview");
-
 // 5. Initialize Mood Grid Cards
 function renderMoodCards() {
   moodGrid.innerHTML = "";
-  MOOD_OPTIONS.forEach((mood, index) => {
+  MOOD_OPTIONS.forEach((mood) => {
     const card = document.createElement("div");
     card.className = "mood-card";
     card.setAttribute("role", "radio");
@@ -228,32 +215,18 @@ async function handleSubmit() {
     mood: `${state.selectedMood.emoji} ${state.selectedMood.title}`
   };
 
-  // Always save a local copy in localStorage as safety backup
+  // Dispatch silently to Google Apps Script
   try {
-    const existingLogs = JSON.parse(localStorage.getItem(STORAGE_KEY_SUBMISSIONS) || "[]");
-    existingLogs.push(payload);
-    localStorage.setItem(STORAGE_KEY_SUBMISSIONS, JSON.stringify(existingLogs));
-  } catch (e) {
-    console.warn("Could not save to localStorage backup", e);
-  }
-
-  // Dispatch to Google Apps Script if URL configured
-  if (state.gasUrl && state.gasUrl.trim().startsWith("http")) {
-    try {
-      // mode: 'no-cors' allows posting to Google Apps Script without CORS redirect blocking
-      await fetch(state.gasUrl.trim(), {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify(payload)
-      });
-    } catch (err) {
-      console.error("Network sync error (will retry or kept in local logs):", err);
-    }
-  } else {
-    console.info("Notice: No Google Apps Script URL set yet. Entry saved to browser local logs.");
+    await fetch(GOOGLE_SHEETS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("Submission error:", err);
   }
 
   // Artificial pleasant delay for tactile confirmation
@@ -283,96 +256,12 @@ function resetForm() {
   userNameInput.focus();
 }
 
-// 7. Admin & Secret Settings Modal
-function openAdminModal() {
-  gasUrlInput.value = state.gasUrl;
-  const currentLunar = calculateSecretLunarPhase();
-  secretLunarPreview.textContent = `${currentLunar.phaseEmoji} ${currentLunar.phaseName} (${currentLunar.illumination} illuminated, ${currentLunar.moonAge})`;
-  testFeedback.hidden = true;
-  adminModal.hidden = false;
-}
-
-function closeAdminModal() {
-  adminModal.hidden = true;
-}
-
-function saveGasUrl() {
-  const url = gasUrlInput.value.trim();
-  state.gasUrl = url;
-  localStorage.setItem(STORAGE_KEY_GAS_URL, url);
-  showTestFeedback("Settings saved successfully!", true);
-  setTimeout(() => closeAdminModal(), 1200);
-}
-
-async function testConnection() {
-  const url = gasUrlInput.value.trim();
-  if (!url || !url.startsWith("http")) {
-    showTestFeedback("Please enter a valid Google Apps Script Web App URL first.", false);
-    return;
-  }
-
-  showTestFeedback("Sending test ping to Google Sheet...", true);
-
-  const testPayload = {
-    localTime: new Date().toLocaleString(),
-    moonPhase: calculateSecretLunarPhase().phaseName,
-    illumination: calculateSecretLunarPhase().illumination,
-    moonAge: calculateSecretLunarPhase().moonAge,
-    name: "[Test Connection Ping]",
-    mood: "Testing connection 🚀"
-  };
-
-  try {
-    await fetch(url, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(testPayload)
-    });
-    showTestFeedback("✓ Ping dispatched! Check your Google Sheet to confirm a test row appeared.", true);
-  } catch (err) {
-    showTestFeedback("Error dispatching test ping: " + err.message, false);
-  }
-}
-
-function showTestFeedback(message, isSuccess) {
-  testFeedback.textContent = message;
-  testFeedback.className = "test-feedback " + (isSuccess ? "success" : "error");
-  testFeedback.hidden = false;
-}
-
-// 8. Event Listeners & Shortcuts
+// 7. Event Listeners
 userNameInput.addEventListener("input", validateForm);
 submitBtn.addEventListener("click", handleSubmit);
 resetBtn.addEventListener("click", resetForm);
 
-adminTrigger.addEventListener("click", openAdminModal);
-modalCloseBtn.addEventListener("click", closeAdminModal);
-saveUrlBtn.addEventListener("click", saveGasUrl);
-testConnectionBtn.addEventListener("click", testConnection);
-
-// Keyboard shortcut: Ctrl + Shift + S to toggle secret settings
-window.addEventListener("keydown", (e) => {
-  if (e.ctrlKey && e.shiftKey && (e.key === "S" || e.key === "s")) {
-    e.preventDefault();
-    if (adminModal.hidden) {
-      openAdminModal();
-    } else {
-      closeAdminModal();
-    }
-  }
-  if (e.key === "Escape" && !adminModal.hidden) {
-    closeAdminModal();
-  }
-});
-
-// Close modal when clicking outside dialog
-adminModal.addEventListener("click", (e) => {
-  if (e.target === adminModal) {
-    closeAdminModal();
-  }
-});
-
-// 9. Initial Boot
+// 8. Initial Boot
 renderMoodCards();
 validateForm();
+

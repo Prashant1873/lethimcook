@@ -74,52 +74,9 @@
       </div>
     </div>
 
-    <!-- Discreet Footer -->
-    <footer class="footer">
-      <span class="footer-copy">Confidential Pulse Test</span>
-      <button type="button" id="admin-trigger" class="admin-gear-btn" title="Configuration & Setup" aria-label="Open settings">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </button>
-    </footer>
-  </div>
-
-  <!-- Discreet Admin Settings Modal (for Google Sheet URL setup) -->
-  <div class="modal-backdrop" id="admin-modal" hidden>
-    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-header">
-        <h3 id="modal-title" class="modal-heading">Backend & Secret Sync Setup</h3>
-        <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="secret-status-card">
-          <div class="secret-label">Current Secret Lunar Metric</div>
-          <div class="secret-val" id="secret-lunar-preview">Calculating...</div>
-          <p class="secret-desc">This data is calculated automatically on the client and logged with every submission, without respondents ever seeing it.</p>
-        </div>
-
-        <div class="modal-field">
-          <label for="gas-url-input" class="modal-field-label">Google Apps Script Web App URL:</label>
-          <input 
-            type="url" 
-            id="gas-url-input" 
-            placeholder="https://script.google.com/macros/s/.../exec" 
-            spellcheck="false"
-          />
-          <span class="help-text">See <code>GOOGLE_SHEETS_SETUP.md</code> for how to get this URL in 2 minutes.</span>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" id="save-url-btn" class="save-btn">Save Settings</button>
-          <button type="button" id="test-connection-btn" class="test-btn">Send Test Ping</button>
-        </div>
-        <div id="test-feedback" class="test-feedback" hidden></div>
-      </div>
-    </div>
   </div>
 
   <script src="app.js"></script>
+
 </body>
 </html>
